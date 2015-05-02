@@ -1,0 +1,38 @@
+#lang racket
+(provide (all-defined-out))
+
+;Signature: derive(f)
+;Type:[[Number->Number]->[Number->Number]]
+;Purpose: receives a function and returns a function which given a number
+;computes the derivative of the original function in that point.
+;Pre-conditions: func is a derivable function.
+;Tests: ((derive (lambda(x)(* x x))) 3) ~ 6
+(define derive (lambda (func) 
+                 (lambda (x) (/(-(func(+ x 0.001)) (func x)) 0.001))))
+
+;Signature: good-enough?(guess f)
+;Type: [number * [number -> number] -> boolean] 
+;Purpose: Compute if the guess is close enough to a real root. 
+;Pre-conditions: f is a function.
+;Tests: (good-enough? 2 (lambda(x)(- (* x x) 4))) => #t
+(define good-enough? (lambda (guess f)
+                       (< (abs (- (f guess) 0)) 0.001)))
+
+;Signature: root(f)
+;Type:[[Number->Number]->Number] 
+;Purpose: returns a value x such that f(x) ~ 0.
+;Pre-conditions: f is a derivable function and has roots.
+;Tests: (root (lambda(x)(- (* x x) 4))) ~ 2
+(define root
+  (lambda (f) 
+   (letrec (
+            (iter (lambda (guess)
+                    (if (good-enough? guess f)
+                        guess
+                        (iter (improve guess f)))))
+            (improve (lambda (guess f)
+                       (- guess (/ (f guess) ((derive f) guess)))))
+            )
+     (iter 1.0))
+    )
+  )
